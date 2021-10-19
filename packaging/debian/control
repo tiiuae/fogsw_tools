@@ -1,0 +1,7 @@
+Package: fogsw-tools
+Version: VERSION
+Maintainer: Manuel Segarra-Abad <manuel.segarra-abad@unikie.com>
+Architecture: amd64
+Description: FOG debug tools
+Depends: python3, ros-foxy-ros-core, ros-foxy-ros2bag,
+ ros-foxy-rosbag2, batctl, tar
