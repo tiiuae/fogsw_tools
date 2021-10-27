@@ -15,3 +15,6 @@ cp -f src/fogsw_package_list.sh ${dest_dir}/usr/bin/ || exit
 chmod +x ${dest_dir}/usr/bin/fogsw_package_list.sh || exit
 cp -f src/mesh_installation_check.sh ${dest_dir}/usr/bin/ || exit
 chmod +x ${dest_dir}/usr/bin/mesh_installation_check.sh || exit
+cp -f src/fog_record_bag_all_topics.sh ${dest_dir}/usr/bin/ || exit
+chmod +x ${dest_dir}/usr/bin/fog_record_bag_all_topics.sh || exit
+
