@@ -58,9 +58,10 @@ for NODE in "${NODES_PARAMS_TO_LOG[@]}"; do
     ros2 param dump --output-dir ${LOG_FOLDER_PATH} /${DRONE_DEVICE_ID}/${NODE}
 done
 
-# ROS2 bag
+# ROS2 bag.
+# NOTE: fog_record_bag_all_topics.sh will block until the user stops the script.
 pushd ${LOG_FOLDER_PATH}
-ros2 bag record -a --qos-profile-overrides-path /opt/ros/foxy/share/mission-data-recorder/fog_qos_overrides.yaml
+/usr/bin/fog_record_bag_all_topics.sh
 popd
 
 for PID in "${LOG_PIDS[@]}"; do
