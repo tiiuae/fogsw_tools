@@ -6,7 +6,7 @@ output_dir=$1
 
 build_number=${GITHUB_RUN_NUMBER:=0}
 
-iname=fog-sw-mission-data-recorder
+iname=fogsw-tools
 docker build \
   --build-arg COMMIT_ID="$(git rev-parse HEAD)" \
   --build-arg GIT_VER="$(git log --date=format:%Y%m%d --pretty=~git%cd.%h -n 1)" \
