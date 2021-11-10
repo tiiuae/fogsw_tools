@@ -1,5 +1,18 @@
 #!/bin/python3
 
+"""
+Flight Environment Config Changer
+=================================
+This script is used for changing px4 parameter
+setup according to the flight environment
+
+Command description:
+ - check     : To read current env setup tag from px4
+ - download  : To download the current config.txt from px4
+ - upload    : To upload new config.txt to px4
+ - remove    : To remove the config.txt from the px4
+"""
+
 import asyncio
 from mavsdk import System
 import sys, os, re
@@ -12,7 +25,8 @@ class FlightEnvChanger:
     address = "tcp://:5760"
     mav = None
 
-    configuration = "[unknown]"
+    default_env = "outdoor"
+    environment = "[unknown]"
     # Exampler configuraition tag in config file:
     # [ env: indoor ]
 
@@ -80,7 +94,7 @@ class FlightEnvChanger:
         ret = await self.check_dir(self.config_dir_path)
         if ret == 0:
             print(f"config directory {self.config_dir_path} missing, creating..")
-            await self.mav.create_directory(self.config_dir_path)
+            await self.mav.ftp.create_directory(self.config_dir_path)
         return True
 
     async def validate_config_file(self):
@@ -91,28 +105,30 @@ class FlightEnvChanger:
                 file=file[1:]
                 file=file.split('\t')[0]
                 if self.config_file_name == file:
+                    # File found
                     return True
+        # File not found
+        self.environment = self.default_env
         return False
 
     async def check_current_config(self):
-        if await self.download_config_file(logging=False, copyfile=False):
-            print(F"Current configuration: '{self.configuration}'")
-        else:
-            print("Config file not found")
+        await self.download_config_file(logging=False, copyfile=False)
+        print(f"Current flight environment: '{self.environment}'")
 
     async def upload_config_file(self):
         if os.path.exists(self.local_config_file_path):
-            shutil.copyfile(self.local_config_file_path, self.tmp_file)
-            self.configuration = self.read_config_type(self.tmp_file)
-            print(f"upload new config file '{self.local_config_file_path}' -- type: {self.configuration}")
-            sys.stdout.write("Upload")
-            progress = self.mav.ftp.upload(self.tmp_file, self.config_dir_path)
-            async for p in progress:
-                sys.stdout.write(".")
-                sys.stdout.flush()
-            print()
-            print("Done")
-            os.remove(self.tmp_file)
+            if await self.validate_config_path():
+                shutil.copyfile(self.local_config_file_path, self.tmp_file)
+                self.environment = self.read_config_type(self.tmp_file)
+                print(f"upload new config file '{self.local_config_file_path}' -- env: {self.environment}")
+                sys.stdout.write("Upload")
+                progress = self.mav.ftp.upload(self.tmp_file, self.config_dir_path)
+                async for p in progress:
+                    sys.stdout.write(".")
+                    sys.stdout.flush()
+                print()
+                print("Done")
+                os.remove(self.tmp_file)
         else:
             print(f"Config file not found: '{self.local_config_file_path}'")
 
@@ -130,19 +146,29 @@ class FlightEnvChanger:
             if logging:
                 print()
                 print("Done")
-            self.configuration = self.read_config_type(self.tmp_file)
+            self.environment = self.read_config_type(self.tmp_file)
             if copyfile:
                 shutil.copyfile(self.tmp_file, self.local_config_file_path)
             os.remove(self.tmp_file)
             if logging:
-                print(f"Config file downloaded: '{self.local_config_file_path}' -- type: {self.configuration}")
+                print(f"Config file downloaded: '{self.local_config_file_path}' -- env: {self.environment}")
+            return True
+        else:
+            return False
+
+    async def remove_config_file(self):
+        if await self.validate_config_file():
+            self.environment = self.default_env
+            # Remove the file from px4 sdcard
+            print(f"Remove file from PX4 path: '{self.config_file_path}'")
+            await self.mav.ftp.remove_file(self.config_file_path)
             return True
         else:
             return False
 
     async def run(self):
-        parser = argparse.ArgumentParser(description='Flight Environment Config Changer')
-        parser.add_argument('COMMAND', choices=['check', 'download', 'upload'], help='Command to execute',)
+        parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=__doc__)
+        parser.add_argument('COMMAND', choices=['check', 'download', 'upload', 'remove'], help='Command to execute',)
         parser.add_argument('-f', '--file', action="store", help='Path to local config file to be read/write', default='./config.txt')
         args = parser.parse_args()
 
@@ -156,6 +182,8 @@ class FlightEnvChanger:
             await self.download_config_file()
         elif args.COMMAND == "upload":
             await self.upload_config_file()
+        elif args.COMMAND == "remove":
+            await self.remove_config_file()
 
 
 def main():
