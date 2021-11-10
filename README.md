@@ -41,3 +41,11 @@ fog_cli.py goto 61.50338377 23.77508231 1.0 -1.57
 ```
 fog_cli.py land
 ```
+
+# flight_env_config.py
+This script is used for changing px4 parameter setup according to the flight environment (e.g. indoor, hitl). The setup is a config.txt file stored into px4 sd-card.
+The script allows:
+ - to check the current env setup in px4
+ - to download the current config.txt from px4
+ - to upload new config.txt to px4
+ - to remove the config.txt from the px4 in order to use the original PX4 Airframe params
