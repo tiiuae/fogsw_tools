@@ -157,14 +157,21 @@ class FlightEnvChanger:
         else:
             return False
 
+    async def clear_hitl_param(self):
+        print(f"Clear SYS_HITL in case set by config")
+        await self.mav.param.set_param_int("SYS_HITL", 0)
+
     async def remove_config_file(self):
         if await self.validate_config_file():
             self.environment = self.default_env
             # Remove the file from px4 sdcard
             print(f"Remove file from PX4 path: '{self.config_file_path}'")
             await self.mav.ftp.remove_file(self.config_file_path)
+            # Clear SYS_HITL definition, in case set by config.txt
+            await self.clear_hitl_param()
             return True
         else:
+            await self.clear_hitl_param()
             return False
 
     async def reboot(self):
