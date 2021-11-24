@@ -11,6 +11,7 @@ Command description:
  - download  : To download the current config.txt from px4
  - upload    : To upload new config.txt to px4
  - remove    : To remove the config.txt from the px4
+ - reboot    : To restart px4
 """
 
 import asyncio
@@ -156,19 +157,31 @@ class FlightEnvChanger:
         else:
             return False
 
+    async def clear_hitl_param(self):
+        print(f"Clear SYS_HITL in case set by config")
+        await self.mav.param.set_param_int("SYS_HITL", 0)
+
     async def remove_config_file(self):
         if await self.validate_config_file():
             self.environment = self.default_env
             # Remove the file from px4 sdcard
             print(f"Remove file from PX4 path: '{self.config_file_path}'")
             await self.mav.ftp.remove_file(self.config_file_path)
+            # Clear SYS_HITL definition, in case set by config.txt
+            await self.clear_hitl_param()
             return True
         else:
+            await self.clear_hitl_param()
             return False
+
+    async def reboot(self):
+        print(f"Reboot PX4")
+        await self.mav.action.reboot()
+
 
     async def run(self):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=__doc__)
-        parser.add_argument('COMMAND', choices=['check', 'download', 'upload', 'remove'], help='Command to execute',)
+        parser.add_argument('COMMAND', choices=['check', 'download', 'upload', 'remove', 'reboot'], help='Command to execute',)
         parser.add_argument('-f', '--file', action="store", help='Path to local config file to be read/write', default='./config.txt')
         args = parser.parse_args()
 
@@ -184,6 +197,8 @@ class FlightEnvChanger:
             await self.upload_config_file()
         elif args.COMMAND == "remove":
             await self.remove_config_file()
+        elif args.COMMAND == "reboot":
+            await self.reboot()
 
 
 def main():
