@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+from random import uniform
 
 from std_srvs.srv import SetBool, Trigger
 from fog_msgs.srv import Vec4
@@ -78,6 +79,16 @@ class FogClientAsync(Node):
         self.future = self.cli.call_async(self.req)
         self.__wait_for_response('goto')
 
+    # Home goal: [0.0, 0.0, 1.0, -1.57]
+    def send_local(self, lat, lon, alt, yaw):
+        self.cli = self.create_client(Vec4, '/%s/navigation/local_waypoint' % self.drone_device_id)
+        while not self.cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = Vec4.Request()
+        self.req.goal = [lat, lon, alt, yaw]
+        self.future = self.cli.call_async(self.req)
+        self.__wait_for_response('local')
+
     def send_land(self):
         self.cli = self.create_client(Trigger, '/%s/control_interface/land' % self.drone_device_id)
         while not self.cli.wait_for_service(timeout_sec=2.0):
@@ -129,6 +140,27 @@ class FogClientAsync(Node):
                 print('\t', self.req.names[i], values[i].double_value)
 
 
+def random_points_range(startx, endx, starty, endy):
+
+    x = round(uniform(startx, endx), 2)
+    y = round(uniform(starty, endy))
+    z = round(uniform(1, 2))
+
+    return x, y, z
+
+
+def get_waypoint(area):
+    if area == 1:
+        return random_points_range(-0.5, 1, 0, 3)
+    elif area == 2:
+        return random_points_range(-0.5, 1, -3, -6)
+    elif area == 3:
+        return random_points_range(-2.5, -4, -3, -6)
+    elif area == 4:
+        return random_points_range(-2.5, -4, -3, -6)
+    raise ValueError
+
+
 def main(args):
     rclpy.init()
 
@@ -152,6 +184,17 @@ def main(args):
             args.altitude,
             args.yaw)
 
+    if args.command == 'local':
+        fog_client.send_local(
+            args.latitude,
+            args.longitude,
+            args.altitude,
+            args.yaw)
+
+    if args.command == 'area':
+        x, y, z = get_waypoint(args.latitude)
+        fog_client.send_local(x, y, z, -1.57)
+
     if args.command == 'get_params':
         value = fog_client.read_params()
 
@@ -161,14 +204,14 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Tool to send flight commands to drone.")
-    parser.add_argument('command', choices=['arming', 'takeoff', 'goto', 'land', 'get_params'])
+    parser.add_argument('command', choices=['arming', 'takeoff', 'goto', 'land', 'local', 'area','get_params'])
     parser.add_argument('latitude', nargs='?', type=float)
     parser.add_argument('longitude', nargs='?', type=float)
     parser.add_argument('altitude', nargs='?', type=float)
     parser.add_argument('yaw', nargs='?', type=float)
     args = parser.parse_args()
 
-    if (args.command == 'goto' and (not args.latitude or not args.longitude or 
+    if (args.command == 'area' and not args.longitude) or (args.command not in ['goto', 'local'] and (not args.latitude or not args.longitude or
       not args.altitude or not args.yaw)):
         print('ERROR: wrong number of arguments.')
         parser.print_usage()
