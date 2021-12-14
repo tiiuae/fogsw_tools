@@ -211,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('yaw', nargs='?', type=float)
     args = parser.parse_args()
 
-    if (args.command == 'area' and args.longitude is None) or (args.command in ['goto', 'local'] and
+    if (args.command == 'area' and args.latitude is None) or (args.command in ['goto', 'local'] and
                                                                (args.latitude is None or args.longitude is None or
                                                                 args.altitude is None or args.yaw is None)):
         print('ERROR: wrong number of arguments.')
