@@ -143,8 +143,8 @@ class FogClientAsync(Node):
 def random_points_range(startx, endx, starty, endy):
 
     x = round(uniform(startx, endx), 2)
-    y = round(uniform(starty, endy))
-    z = round(uniform(1, 2))
+    y = round(uniform(starty, endy), 2)
+    z = round(uniform(1, 2), 2)
 
     return x, y, z
 
@@ -211,8 +211,9 @@ if __name__ == '__main__':
     parser.add_argument('yaw', nargs='?', type=float)
     args = parser.parse_args()
 
-    if (args.command == 'area' and not args.longitude) or (args.command not in ['goto', 'local'] and (not args.latitude or not args.longitude or
-      not args.altitude or not args.yaw)):
+    if (args.command == 'area' and args.longitude is None) or (args.command in ['goto', 'local'] and
+                                                               (args.latitude is None or args.longitude is None or
+                                                                args.altitude is None or args.yaw is None)):
         print('ERROR: wrong number of arguments.')
         parser.print_usage()
         sys.exit(1)
