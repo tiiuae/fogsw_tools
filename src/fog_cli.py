@@ -204,7 +204,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Tool to send flight commands to drone.")
-    parser.add_argument('command', choices=['arming', 'takeoff', 'goto', 'land', 'local', 'area','get_params'])
+    parser.add_argument('command', choices=['arming', 'takeoff', 'goto', 'land', 'local', 'area', 'get_params'])
     parser.add_argument('latitude', nargs='?', type=float)
     parser.add_argument('longitude', nargs='?', type=float)
     parser.add_argument('altitude', nargs='?', type=float)
