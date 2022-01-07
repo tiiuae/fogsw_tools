@@ -8,7 +8,7 @@ fi
 
 echo "-------------------------------------------------------"
 echo "check deb packages.."
-PACKAGE_LIST="wifi-firmware wpasupplicant ros-foxy-mesh-com"
+PACKAGE_LIST="wifi-firmware wpasupplicant ros-galactic-mesh-com"
 
 for e in $PACKAGE_LIST; do
     apt-cache policy "$e"

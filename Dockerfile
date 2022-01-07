@@ -1,5 +1,5 @@
 # fog-sw BUILDER
-FROM ros:foxy-ros-base as fog-sw-builder
+FROM ros:galactic-ros-base as fog-sw-builder
 
 ARG BUILD_NUMBER
 ARG COMMIT_ID
