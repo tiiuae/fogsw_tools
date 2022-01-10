@@ -10,8 +10,9 @@ NODES_PARAMS_TO_LOG=("bumper" "control_interface" "navigation")
 mkdir ${LOG_FOLDER_PATH}
 
 function start_service_logging () {
-    echo "journalctl -u $1 -f -b > ${LOG_FOLDER_PATH}/${1%".service"}.log"
-    journalctl -u $1 -f -b > ${LOG_FOLDER_PATH}/${1%".service"}.log &
+    RUNNING_SINCE=$(uptime -s)
+    echo "journalctl -u $1 -f -S \"${RUNNING_SINCE}\" > ${LOG_FOLDER_PATH}/${1%".service"}.log"
+    journalctl -u $1 -f -S "${RUNNING_SINCE}" > ${LOG_FOLDER_PATH}/${1%".service"}.log &
     LOG_PIDS+=($!)
 }
 
