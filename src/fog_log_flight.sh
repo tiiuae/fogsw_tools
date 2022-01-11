@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /opt/ros/foxy/setup_fog.sh
+source /opt/ros/galactic/setup_fog.sh
 
 LOG_FOLDER_NAME=flight_logs-$(date +%Y_%m_%d-%H%M%S)
 LOG_FOLDER_PATH=/home/sad/${LOG_FOLDER_NAME}
@@ -10,13 +10,14 @@ NODES_PARAMS_TO_LOG=("bumper" "control_interface" "navigation")
 mkdir ${LOG_FOLDER_PATH}
 
 function start_service_logging () {
-    echo "journalctl -u $1 -f -b > ${LOG_FOLDER_PATH}/${1%".service"}.log"
-    journalctl -u $1 -f -b > ${LOG_FOLDER_PATH}/${1%".service"}.log &
+    RUNNING_SINCE=$(uptime -s)
+    echo "journalctl -u $1 -f -S \"${RUNNING_SINCE}\" > ${LOG_FOLDER_PATH}/${1%".service"}.log"
+    journalctl -u $1 -f -S "${RUNNING_SINCE}" > ${LOG_FOLDER_PATH}/${1%".service"}.log &
     LOG_PIDS+=($!)
 }
 
 # Cloud/mission
-start_service_logging communication_link.service
+start_service_logging cloud_link.service
 start_service_logging mission-data-recorder.service
 start_service_logging mission_engine.service
 start_service_logging ota_update.service
@@ -32,6 +33,7 @@ start_service_logging mesh.service
 start_service_logging bumper.service
 start_service_logging control_interface.service
 start_service_logging navigation.service
+start_service_logging odometry2.service
 start_service_logging octomap_server2.service
 start_service_logging mocap_pose.service
 start_service_logging rplidar.service
@@ -42,6 +44,7 @@ start_service_logging mavlink-router.service
 start_service_logging micrortps_agent.service
 
 start_service_logging depthai_ctrl.service
+start_service_logging depthai_gstreamer_node.service
 start_service_logging mocap_pose.service
 
 # FOG package list

@@ -3,5 +3,5 @@ Version: VERSION
 Maintainer: Manuel Segarra-Abad <manuel.segarra-abad@unikie.com>
 Architecture: amd64
 Description: FOG debug tools
-Depends: python3, ros-foxy-ros-core, ros-foxy-ros2bag,
- ros-foxy-rosbag2, batctl, tar
+Depends: python3, ros-galactic-ros-core, ros-galactic-ros2bag,
+ ros-galactic-rosbag2, batctl, tar
