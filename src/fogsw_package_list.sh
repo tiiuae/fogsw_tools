@@ -18,8 +18,8 @@
   ros-galactic-fog-msgs \
   ros-galactic-mocap-pose \
   ros-galactic-navigation \
-  ros-galactic-fog-bumper \
-  ros-galactic-odometry2 \
+#  ros-galactic-fog-bumper \
+#  ros-galactic-odometry2 \
   ros-galactic-octomap-server2 \
   ros-galactic-rplidar-ros2 \
   rtl8812au-kmod \

@@ -30,10 +30,10 @@ start_service_logging mesh_pub.service
 start_service_logging mesh.service
 
 # F4F
-start_service_logging bumper.service
+# start_service_logging bumper.service
 start_service_logging control_interface.service
 start_service_logging navigation.service
-start_service_logging odometry2.service
+# start_service_logging odometry2.service
 start_service_logging octomap_server2.service
 start_service_logging mocap_pose.service
 start_service_logging rplidar.service
