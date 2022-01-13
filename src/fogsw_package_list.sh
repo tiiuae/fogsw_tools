@@ -22,7 +22,7 @@
 #  ros-galactic-odometry2 \
   ros-galactic-octomap-server2 \
   ros-galactic-rplidar-ros2 \
-  rtl8812au-kmod \
+#  rtl8812au-kmod \
   px4-firmware-updater \
   wpasupplicant \
   linux-image-5.11.22-git20210928.2710467-fog \
