@@ -150,14 +150,17 @@ def random_points_range(startx, endx, starty, endy):
 
 
 def get_waypoint(area):
-    if area == 1:
-        return random_points_range(-0.5, 1, 0, 3)
+    if area == 0:
+        return 0.0, 0.0, 1.0
+    elif area == 1:
+        return random_points_range(-0.5, 0, 0, 1.5)
     elif area == 2:
-        return random_points_range(-0.5, 1, -3, -6)
+        return random_points_range(-0.5, 0, -2, -3.5)
     elif area == 3:
-        return random_points_range(-2.5, -4, -3, -6)
+        return random_points_range(-2, -2.5, -2, -3.5)
     elif area == 4:
-        return random_points_range(-2.5, -4, -3, -6)
+        return random_points_range(-2, -2.5, 0, 1.5)
+    print("Area command failed. Choose an integer between 0 and 4.")
     raise ValueError
 
 
@@ -193,6 +196,7 @@ def main(args):
 
     if args.command == 'area':
         x, y, z = get_waypoint(args.latitude)
+        print(x, y, z)
         fog_client.send_local(x, y, z, -1.57)
 
     if args.command == 'get_params':
