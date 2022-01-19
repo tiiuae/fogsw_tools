@@ -5,7 +5,7 @@ source /opt/ros/galactic/setup_fog.sh
 LOG_FOLDER_NAME=flight_logs-$(date +%Y_%m_%d-%H%M%S)
 LOG_FOLDER_PATH=/home/sad/${LOG_FOLDER_NAME}
 LOG_PIDS=()
-NODES_PARAMS_TO_LOG=("bumper" "control_interface" "navigation")
+NODES_PARAMS_TO_LOG=("control_interface" "navigation")
 
 mkdir ${LOG_FOLDER_PATH}
 
@@ -30,10 +30,10 @@ start_service_logging mesh_pub.service
 start_service_logging mesh.service
 
 # F4F
-start_service_logging bumper.service
+# start_service_logging bumper.service
 start_service_logging control_interface.service
 start_service_logging navigation.service
-start_service_logging odometry2.service
+# start_service_logging odometry2.service
 start_service_logging octomap_server2.service
 start_service_logging mocap_pose.service
 start_service_logging rplidar.service
