@@ -23,7 +23,6 @@ import shutil
 
 class FlightEnvChanger:
 
-    address = "tcp://:5760"
     mav = None
 
     default_env = "outdoor"
@@ -37,7 +36,6 @@ class FlightEnvChanger:
 
     config_dir_path = ""
     config_file_path = ""
-    local_config_file_path = ""
     tmp_file = "/tmp/" + config_file_name
 
     async def initialize(self):
@@ -47,8 +45,8 @@ class FlightEnvChanger:
         self.mav = System()
 
         print("Connecting to px4...")
-        # Connect to mavlink-router TCP port 5760
-        await self.mav.connect(system_address=self.address)
+        # Connect
+        await self.mav.connect(system_address=self.args.address)
         # This waits till a mavlink based drone is connected
         async for state in self.mav.core.connection_state():
             if state.is_connected:
@@ -80,9 +78,9 @@ class FlightEnvChanger:
             line = fh.readline()
             if not line:
                 break
-            match = re.search(r'#\s*\[\s*env:\s*(\S+)\s*\]', line)
+            match = re.search(r'#\s*\[\s*(type|env):\s*(\S+)\s*\]', line)
             if match:
-                return match.group(1)
+                return match.group(2)
         return "[unknown]"
 
     async def validate_config_path(self):
@@ -117,11 +115,11 @@ class FlightEnvChanger:
         print(f"Current flight environment: '{self.environment}'")
 
     async def upload_config_file(self):
-        if os.path.exists(self.local_config_file_path):
+        if os.path.exists(self.args.file):
             if await self.validate_config_path():
-                shutil.copyfile(self.local_config_file_path, self.tmp_file)
+                shutil.copyfile(self.args.file, self.tmp_file)
                 self.environment = self.read_config_type(self.tmp_file)
-                print(f"upload new config file '{self.local_config_file_path}' -- env: {self.environment}")
+                print(f"upload new config file '{self.args.file}' -- env: {self.environment}")
                 sys.stdout.write("Upload")
                 progress = self.mav.ftp.upload(self.tmp_file, self.config_dir_path)
                 async for p in progress:
@@ -131,7 +129,7 @@ class FlightEnvChanger:
                 print("Done")
                 os.remove(self.tmp_file)
         else:
-            print(f"Config file not found: '{self.local_config_file_path}'")
+            print(f"Config file not found: '{self.args.file}'")
 
     async def download_config_file(self, copyfile=True, logging=True):
         if await self.validate_config_file():
@@ -149,10 +147,10 @@ class FlightEnvChanger:
                 print("Done")
             self.environment = self.read_config_type(self.tmp_file)
             if copyfile:
-                shutil.copyfile(self.tmp_file, self.local_config_file_path)
+                shutil.copyfile(self.tmp_file, self.args.file)
             os.remove(self.tmp_file)
             if logging:
-                print(f"Config file downloaded: '{self.local_config_file_path}' -- env: {self.environment}")
+                print(f"Config file downloaded: '{self.args.file}' -- env: {self.environment}")
             return True
         else:
             return False
@@ -183,21 +181,20 @@ class FlightEnvChanger:
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=__doc__)
         parser.add_argument('COMMAND', choices=['check', 'download', 'upload', 'remove', 'reboot'], help='Command to execute',)
         parser.add_argument('-f', '--file', action="store", help='Path to local config file to be read/write', default='./config.txt')
-        args = parser.parse_args()
+        parser.add_argument('-a', '--address', action="store", help='Address to connect. (e.g serial:///dev/ttyACM0, udp:192.168.200.101:14540, tcp://:5760)', default='tcp://:5760')
+        self.args = parser.parse_args()
 
         await self.initialize()
 
-        self.local_config_file_path = args.file
-
-        if args.COMMAND == "check":
+        if self.args.COMMAND == "check":
             await self.check_current_config()
-        elif args.COMMAND == "download":
+        elif self.args.COMMAND == "download":
             await self.download_config_file()
-        elif args.COMMAND == "upload":
+        elif self.args.COMMAND == "upload":
             await self.upload_config_file()
-        elif args.COMMAND == "remove":
+        elif self.args.COMMAND == "remove":
             await self.remove_config_file()
-        elif args.COMMAND == "reboot":
+        elif self.args.COMMAND == "reboot":
             await self.reboot()
 
 
