@@ -1,8 +1,10 @@
-FROM ghcr.io/tiiuae/tii-ubuntu-ros 
+FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-1cabd43
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    ros-galactic-fog-msgs ros-galactic-px4-msgs python3-pip python3-systemd \
+    python3-pip python3-systemd \
     && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /fog-tools
 
 # Install pip and python dependencies
 # RUN python3 -m pip install systemd
