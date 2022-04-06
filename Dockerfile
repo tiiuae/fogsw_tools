@@ -1,36 +1,22 @@
 # fog-sw BUILDER
-FROM ros:galactic-ros-base as fog-sw-builder
+#FROM ros:galactic-ros-base as fog-sw-builder
+# FROM ubuntu:20.04
+# Docker ghcr.io read packages — read:packages : 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
 
-ARG BUILD_NUMBER
-ARG COMMIT_ID
-ARG GIT_VER
+LABEL org.opencontainers.image.source = "https://github.com/tiiuae/fogsw_tools"
 
-# workaround for ROS GPG Key Expiration Incident
-RUN rm /etc/apt/sources.list.d/ros2-latest.list && \
-    apt-get update && \
-    apt-get install -y curl && \
-    curl http://repo.ros2.org/repos.key | sudo apt-key add - && \
-    echo "deb http://packages.ros.org/ros2/ubuntu focal main" > /etc/apt/sources.list.d/ros2-latest.list && \
-    apt-get update
+FROM ghcr.io/tiiuae/tii-ubuntu-ros 
 
-RUN echo "deb [trusted=yes] https://ssrc.jfrog.io/artifactory/ssrc-debian-public-remote focal fog-sw" >> /etc/apt/sources.list
-
-# Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    debhelper \
-    dh-make \
-    fakeroot \
+    ros-galactic-fog-msgs ros-galactic-px4-msgs python3-pip python3-systemd \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /build
+# Install pip and python dependencies
+# RUN python3 -m pip install systemd
 
-COPY . .
+# make all commands in /fog-tools/* invocable without full path
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/fog-tools
+ENV PYTHONPATH=/opt/ros/galactic/lib/python3.8/site-packages
+ENV LD_LIBRARY_PATH=/opt/ros/galactic/opt/yaml_cpp_vendor/lib:/opt/ros/galactic/lib/x86_64-linux-gnu:/opt/ros/galactic/lib
 
-RUN params="-m $(realpath .) " \
-    && [ ! "${BUILD_NUMBER}" = "" ] && params="$params -b ${BUILD_NUMBER}" || : \
-    && [ ! "${COMMIT_ID}" = "" ] && params="$params -c ${COMMIT_ID}" || : \
-    && [ ! "${GIT_VER}" = "" ] && params="$params -g ${GIT_VER}" || : \
-    && ./packaging/common/package.sh $params
-
-FROM scratch
-COPY --from=fog-sw-builder /build/*.deb /packages/
+COPY src/ /fog-tools/

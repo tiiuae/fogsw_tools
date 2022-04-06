@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 
+from mimetypes import init
+import string
 import sys
 import os
 import argparse
 from random import uniform
+import time
+from systemd import journal
+import select
 
 from std_srvs.srv import SetBool, Trigger
 from fog_msgs.srv import Vec4
 import rclpy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy, QoSHistoryPolicy
 from rcl_interfaces.msg import ParameterValue, ParameterType
 from rcl_interfaces.srv import SetParameters, GetParameters
 
+from px4_msgs.msg import VehicleStatus
 
 class FogClientAsync(Node):
 
@@ -98,15 +105,6 @@ class FogClientAsync(Node):
         self.__wait_for_response('land')
 
     def read_params(self):
-        #self.cli = self.create_client(SetParameters, '/%s/navigation/set_parameters' % self.drone_device_id)
-        #while not self.cli.wait_for_service(timeout_sec=2.0):
-        #    self.get_logger().info('service not available, waiting again...')
-        #self.req = SetParameters.Request()
-        #new_param_value = ParameterValue(type=ParameterType.PARAMETER_DOUBLE, double_value=1.2)
-        #self.req.parameters = [Parameter(name='planning.safe_obstacle_distance', value=new_param_value)]
-        #self.future = self.cli.call_async(self.req)
-        #self.__wait_for_response('SET')
-
         self.cli = self.create_client(GetParameters, '/%s/bumper/get_parameters' % self.drone_device_id)
         while not self.cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info('service not available, waiting again...')
@@ -140,6 +138,172 @@ class FogClientAsync(Node):
                 print('\t', self.req.names[i], values[i].double_value)
 
 
+class FogClientSync(Node):
+    def __init__(self, args):
+        super().__init__('minimal_subscriber', namespace=os.getenv('DRONE_DEVICE_ID'))
+        self.drone_device_id = os.getenv('DRONE_DEVICE_ID')
+        self.args = args
+        # self.msg_type = importlib.import_module(args.msg_type)
+        self._waiting = True
+        # self.topic = args.topic
+        self.qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_VOLATILE,
+            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            depth=10
+        )
+        
+
+    def listener_callback(self, msg):
+        self.get_logger().info('nav_state={}, arming_state={}'.format(msg.nav_state, msg.arming_state))
+        if self.args.command == 'arming':
+            if msg.arming_state == 2:
+                self._waiting = False
+        elif self.args.command == 'takeoff':
+            if msg.nav_state == 3:
+                self._waiting = False
+        elif self.args.command == 'land':
+            if msg.arming_state == 1:
+                self._waiting = False
+        
+
+    def create_subs(self):
+        self.subscription = self.create_subscription(
+            VehicleStatus,
+            '/{}/fmu/vehicle_status/out'.format(self.drone_device_id),
+            self.listener_callback,
+            self.qos_profile)
+        self.subscription  # prevent unused variable warning
+
+    def waiting(self):
+        return self._waiting
+
+class LogPoller():
+    def __init__(self, args):
+        self.args = args
+
+    def wait_for_existence(self, service_name, log_entry, wait=30):
+        status = False
+        # Create a systemd.journal.Reader instance
+        j = journal.Reader()
+
+        # Set the reader's default log level
+        j.log_level(journal.LOG_INFO)
+
+        # Only include entries since the current box has booted.
+        j.this_boot()
+        j.this_machine()
+
+        # Filter log entries
+        j.add_match(
+            _SYSTEMD_UNIT=u'{}.service'.format(service_name)
+        )
+
+        # Move to the end of the journal
+        j.seek_tail()
+
+        # Important! - Discard old journal entries
+        j.get_previous()
+
+        # Create a poll object for journal entries
+        p = select.poll()
+
+        # Register the journal's file descriptor with the polling object.
+        journal_fd = j.fileno()
+        poll_event_mask = j.get_events()
+        p.register(journal_fd, poll_event_mask)
+
+        timeout = time.time() + wait
+        # Poll for new journal entries every 250ms until timeout
+        match = False
+        while time.time() <= timeout:
+            if p.poll(250):
+                if j.process() == journal.APPEND:
+                    for entry in j:
+                        # pprint.pprint(entry)
+                        msg = entry['MESSAGE']
+                        x = msg.rfind(":")
+                        msg_text = msg[x+1:].strip()
+                        print(msg_text)
+                        if msg_text == log_entry:
+                            match = True
+                            status = True
+                            break
+            if match:
+                break
+            # print('waiting ... %s' % datetime.datetime.now())
+
+        return status
+
+def run_command(parser, args):
+
+    if ((args.command == 'goto' or args.command == 'local') and args.sync == True) and \
+       (args.timeout == None or args.log_str == None):
+        print('These optional arguments are required for goto command is run as synchronously:\n'
+              '\t--timeout\n\t--log_str')
+    elif args.command == 'area' and args.number == None:
+        print('These optional arguments are required for area command is run as synchronously:\n'
+              '\t--number\n')
+
+def init_arg_parser():    
+    parser = argparse.ArgumentParser(
+        prog='fog_cli.py', 
+        epilog="See '<command> --help' to read about a specific sub-command."
+    )
+    subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
+
+    arming_parser = subparsers.add_parser('arming', help='Arming')
+    arming_parser.add_argument('--sync', action='store_true', help='Run command synchronously')
+    arming_parser.add_argument('--timeout', type=int)
+    arming_parser.set_defaults(func=run_command)
+
+    takeoff_parser = subparsers.add_parser('takeoff', help='Takeoff')
+    takeoff_parser.add_argument('--sync', action='store_true')
+    takeoff_parser.add_argument('--timeout', type=int)
+    takeoff_parser.set_defaults(func=run_command)
+
+    goto_parser = subparsers.add_parser('goto', help='Goto')
+    goto_parser.add_argument('latitude', nargs='?', type=float)
+    goto_parser.add_argument('longitude', nargs='?', type=float)
+    goto_parser.add_argument('altitude', nargs='?', type=float)
+    goto_parser.add_argument('yaw', nargs='?', type=float)
+    goto_parser.add_argument('--timeout', type=int)
+    goto_parser.add_argument('--sync', action='store_true')
+    goto_parser.add_argument('--log_str', type=str)
+    goto_parser.set_defaults(func=run_command)
+
+    local_parser = subparsers.add_parser('local', help='Local')
+    local_parser.add_argument('latitude', nargs='?', type=float)
+    local_parser.add_argument('longitude', nargs='?', type=float)
+    local_parser.add_argument('altitude', nargs='?', type=float)
+    local_parser.add_argument('yaw', nargs='?', type=float)
+    local_parser.add_argument('--timeout', type=int)
+    local_parser.add_argument('--sync', action='store_true')
+    local_parser.add_argument('--log_str', type=str)
+    local_parser.set_defaults(func=run_command)
+
+    area_parser = subparsers.add_parser('area', help='Area')
+    area_parser.add_argument('--number', nargs='?', type=int)
+    area_parser.add_argument('--sync', action='store_true')
+    area_parser.add_argument('--timeout', type=int)
+    area_parser.set_defaults(func=run_command)
+
+    params_parser = subparsers.add_parser('get_params', help='get_params')
+    params_parser.set_defaults(func=run_command)
+
+    land_parser = subparsers.add_parser('land', help='Land')
+    land_parser.add_argument('--sync', action='store_true')
+    land_parser.add_argument('--timeout', type=int)
+    land_parser.set_defaults(func=run_command)
+
+    args = parser.parse_args()
+    if args.command is not None:
+        args.func(parser, args)
+    else:
+        parser.print_help()
+
+    return args
+
 def random_points_range(startx, endx, starty, endy):
 
     x = round(uniform(startx, endx), 2)
@@ -167,61 +331,100 @@ def get_waypoint(area):
 def main(args):
     rclpy.init()
 
-    fog_client = FogClientAsync()
+    if args.sync == False:
 
-    if args.command == 'arming':
-        fog_client.send_arming()
+        fog_client = FogClientAsync()
 
-    # Includes arming
-    if args.command == 'takeoff':
-        fog_client.send_arming()
-        fog_client.send_takeoff()
+        if args.command == 'arming':
+            fog_client.send_arming()
 
-    if args.command == 'land':
-        fog_client.send_land()
+        # Includes arming
+        if args.command == 'takeoff':
+            fog_client.send_arming()
+            fog_client.send_takeoff()
 
-    if args.command == 'goto':
-        fog_client.send_goto(
-            args.latitude, 
-            args.longitude,
-            args.altitude,
-            args.yaw)
+        if args.command == 'land':
+            fog_client.send_land()
 
-    if args.command == 'local':
-        fog_client.send_local(
-            args.latitude,
-            args.longitude,
-            args.altitude,
-            args.yaw)
+        if args.command == 'goto':
+            fog_client.send_goto(
+                args.latitude, 
+                args.longitude,
+                args.altitude,
+                args.yaw)
 
-    if args.command == 'area':
-        x, y, z = get_waypoint(args.latitude)
-        print(x, y, z)
-        fog_client.send_local(x, y, z, -1.57)
+        if args.command == 'local':
+            fog_client.send_local(
+                args.latitude,
+                args.longitude,
+                args.altitude,
+                args.yaw)
 
-    if args.command == 'get_params':
-        value = fog_client.read_params()
+        if args.command == 'area':
+            x, y, z = get_waypoint(args.latitude)
+            print(x, y, z)
+            fog_client.send_local(x, y, z, -1.57)
 
-    fog_client.destroy_node()
+        if args.command == 'get_params':
+            value = fog_client.read_params()
+
+        fog_client.destroy_node()
+    # sync
+    else:
+        fog_client = FogClientAsync()
+        fog_client_sync = FogClientSync(args)
+
+        if args.command == 'arming':
+            # send message
+            fog_client.send_arming()
+            # wait until drone armed (VehicleStatus.arming_state=2)
+            fog_client_sync.create_subs()
+            while fog_client_sync.waiting():
+                rclpy.spin_once(fog_client_sync)
+        elif args.command == 'takeoff':
+            fog_client.send_arming()
+            fog_client.send_takeoff()
+            # wait until drone is in mission mode (VehicleStatus.nav_state=3)
+            fog_client_sync.create_subs()
+            while fog_client_sync.waiting():
+                rclpy.spin_once(fog_client_sync)
+        elif args.command == 'goto':
+            fog_client.send_goto(
+                args.latitude, 
+                args.longitude,
+                args.altitude,
+                args.yaw)
+            poller = LogPoller(args)
+            poller.wait_for_existence('control_interface', 'No navigation goals available. Switching to IDLE', args.timeout)
+        elif args.command == 'local':
+            fog_client.send_goto(
+                args.latitude, 
+                args.longitude,
+                args.altitude,
+                args.yaw)
+            poller = LogPoller(args)
+            poller.wait_for_existence('control_interface', 'No navigation goals available. Switching to IDLE', args.timeout)
+        elif args.command == 'land':
+            fog_client.send_land()
+            # wait until drone is in mission mode (VehicleStatus.arming_state=3)
+            fog_client_sync.create_subs()
+            while fog_client_sync.waiting():
+                rclpy.spin_once(fog_client_sync)
+
+        elif args.command == 'area':
+            pass
+        elif args.command == 'get_params':
+            pass
+
+        fog_client.destroy_node()
+        fog_client_sync.destroy_node()
+
+
     rclpy.shutdown()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Tool to send flight commands to drone.")
-    parser.add_argument('command', choices=['arming', 'takeoff', 'goto', 'land', 'local', 'area', 'get_params'])
-    parser.add_argument('latitude', nargs='?', type=float)
-    parser.add_argument('longitude', nargs='?', type=float)
-    parser.add_argument('altitude', nargs='?', type=float)
-    parser.add_argument('yaw', nargs='?', type=float)
-    args = parser.parse_args()
-
-    if (args.command == 'area' and args.latitude is None) or (args.command in ['goto', 'local'] and
-                                                               (args.latitude is None or args.longitude is None or
-                                                                args.altitude is None or args.yaw is None)):
-        print('ERROR: wrong number of arguments.')
-        parser.print_usage()
-        sys.exit(1)
-
+    args = init_arg_parser()
     main(args)
 
 
