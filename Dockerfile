@@ -1,10 +1,3 @@
-# fog-sw BUILDER
-#FROM ros:galactic-ros-base as fog-sw-builder
-# FROM ubuntu:20.04
-# Docker ghcr.io read packages — read:packages : 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
-
-LABEL org.opencontainers.image.source = "https://github.com/tiiuae/fogsw_tools"
-
 FROM ghcr.io/tiiuae/tii-ubuntu-ros 
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
