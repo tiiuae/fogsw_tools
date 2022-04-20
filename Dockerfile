@@ -6,7 +6,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ros-galactic-fog-msgs ros-galactic-px4-msgs \
     python3-pip python3-systemd gcc \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pyserial pymavlink
+    && pip3 install pyserial pymavlink mavsdk
 
 WORKDIR /fog-tools
 
