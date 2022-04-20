@@ -51,4 +51,4 @@ The script allows:
  - to remove the config.txt from the px4 in order to use the original PX4 Airframe params
 
 # download_px4_logfile.py
-Script to download ulog files from PX4 (sdcard) interactively. Script fetches available logfiles in PX4 log directory and request selection to download. flag '-l' can be used to skip interactive selection and just download the latest log file for automation purposes.
+Script to download ulog files from PX4 (sdcard) interactively. Script fetches a list of available logfiles in PX4 log directory and request selection to download. flag '--latest' can be used to skip interactive selection and just download the latest log file for automation purposes.
