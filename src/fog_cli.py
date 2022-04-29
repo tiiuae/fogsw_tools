@@ -7,8 +7,8 @@ import os
 import argparse
 from random import uniform
 import time
-from systemd import journal
-import select
+
+
 
 from std_srvs.srv import SetBool, Trigger
 from fog_msgs.srv import Vec4
@@ -20,6 +20,7 @@ from rcl_interfaces.msg import ParameterValue, ParameterType
 from rcl_interfaces.srv import SetParameters, GetParameters
 
 from px4_msgs.msg import VehicleStatus
+from std_msgs.msg import String
 
 class FogClientAsync(Node):
 
@@ -143,18 +144,20 @@ class FogClientSync(Node):
         super().__init__('minimal_subscriber', namespace=os.getenv('DRONE_DEVICE_ID'))
         self.drone_device_id = os.getenv('DRONE_DEVICE_ID')
         self.args = args
+        self.vehicle_status_subs = None
+        self.navigation_status_subs = None
         # self.msg_type = importlib.import_module(args.msg_type)
         self._waiting = True
         # self.topic = args.topic
         self.qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
-            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_VOLATILE,
-            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            history=QoSHistoryPolicy.KEEP_LAST,
             depth=10
         )
-        
 
-    def listener_callback(self, msg):
+
+    def vehicle_status_listener_cb(self, msg):
         self.get_logger().info('nav_state={}, arming_state={}'.format(msg.nav_state, msg.arming_state))
         if self.args.command == 'arming':
             if msg.arming_state == 2:
@@ -165,89 +168,47 @@ class FogClientSync(Node):
         elif self.args.command == 'land':
             if msg.arming_state == 1:
                 self._waiting = False
-        
+
+    def navigation_status_listener_cb(self, msg):
+        self.get_logger().info('msg data={}'.format(msg.data))
+        if msg.data == 'IDLE':
+            self._waiting = False
+
 
     def create_subs(self):
-        self.subscription = self.create_subscription(
-            VehicleStatus,
-            '/{}/fmu/vehicle_status/out'.format(self.drone_device_id),
-            self.listener_callback,
-            self.qos_profile)
-        self.subscription  # prevent unused variable warning
+        if self.args.command in ['arming', 'takeoff', 'land']:
+            self.vehicle_status_subs = self.create_subscription(
+                VehicleStatus,
+                '/{}/fmu/vehicle_status/out'.format(self.drone_device_id),
+                self.vehicle_status_listener_cb,
+                self.qos_profile)
+            self.vehicle_status_subs  # prevent unused variable warning
+        elif self.args.command in ['goto', 'local']:
+            self.navigation_status_subs = self.create_subscription(
+                String,
+                '/{}/navigation/status_out'.format(self.drone_device_id),
+                self.navigation_status_listener_cb,
+                self.qos_profile)
+            self.navigation_status_subs  # prevent unused variable warning
 
     def waiting(self):
         return self._waiting
 
-class LogPoller():
-    def __init__(self, args):
-        self.args = args
 
-    def wait_for_existence(self, service_name, log_entry, wait=30):
-        status = False
-        # Create a systemd.journal.Reader instance
-        j = journal.Reader()
-
-        # Set the reader's default log level
-        j.log_level(journal.LOG_INFO)
-
-        # Only include entries since the current box has booted.
-        j.this_boot()
-        j.this_machine()
-
-        # Filter log entries
-        j.add_match(
-            _SYSTEMD_UNIT=u'{}.service'.format(service_name)
-        )
-
-        # Move to the end of the journal
-        j.seek_tail()
-
-        # Important! - Discard old journal entries
-        j.get_previous()
-
-        # Create a poll object for journal entries
-        p = select.poll()
-
-        # Register the journal's file descriptor with the polling object.
-        journal_fd = j.fileno()
-        poll_event_mask = j.get_events()
-        p.register(journal_fd, poll_event_mask)
-
-        timeout = time.time() + wait
-        # Poll for new journal entries every 250ms until timeout
-        match = False
-        while time.time() <= timeout:
-            if p.poll(250):
-                if j.process() == journal.APPEND:
-                    for entry in j:
-                        # pprint.pprint(entry)
-                        msg = entry['MESSAGE']
-                        x = msg.rfind(":")
-                        msg_text = msg[x+1:].strip()
-                        print(msg_text)
-                        if msg_text == log_entry:
-                            match = True
-                            status = True
-                            break
-            if match:
-                break
-            # print('waiting ... %s' % datetime.datetime.now())
-
-        return status
 
 def run_command(parser, args):
 
-    if ((args.command == 'goto' or args.command == 'local') and args.sync == True) and \
-       (args.timeout == None or args.log_str == None):
+    if (args.sync == True) and (args.timeout == None):
         print('These optional arguments are required for goto command is run as synchronously:\n'
-              '\t--timeout\n\t--log_str')
+              '\t--timeout\nSetting default value 30s')
+        args.timeout = 30 # set default 30s timeout, better than nothing
     elif args.command == 'area' and args.number == None:
         print('These optional arguments are required for area command is run as synchronously:\n'
               '\t--number\n')
 
-def init_arg_parser():    
+def init_arg_parser():
     parser = argparse.ArgumentParser(
-        prog='fog_cli.py', 
+        prog='fog_cli.py',
         epilog="See '<command> --help' to read about a specific sub-command."
     )
     subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
@@ -269,7 +230,7 @@ def init_arg_parser():
     goto_parser.add_argument('yaw', nargs='?', type=float)
     goto_parser.add_argument('--timeout', type=int)
     goto_parser.add_argument('--sync', action='store_true')
-    goto_parser.add_argument('--log_str', type=str)
+
     goto_parser.set_defaults(func=run_command)
 
     local_parser = subparsers.add_parser('local', help='Local')
@@ -279,7 +240,7 @@ def init_arg_parser():
     local_parser.add_argument('yaw', nargs='?', type=float)
     local_parser.add_argument('--timeout', type=int)
     local_parser.add_argument('--sync', action='store_true')
-    local_parser.add_argument('--log_str', type=str)
+
     local_parser.set_defaults(func=run_command)
 
     area_parser = subparsers.add_parser('area', help='Area')
@@ -329,6 +290,9 @@ def get_waypoint(area):
 
 
 def main(args):
+
+    status = 0
+
     rclpy.init()
 
     if args.sync == False:
@@ -377,44 +341,40 @@ def main(args):
         if args.command == 'arming':
             # send message
             fog_client.send_arming()
-            # wait until drone armed (VehicleStatus.arming_state=2)
-            fog_client_sync.create_subs()
-            while fog_client_sync.waiting():
-                rclpy.spin_once(fog_client_sync)
+            
         elif args.command == 'takeoff':
             fog_client.send_arming()
             fog_client.send_takeoff()
-            # wait until drone is in mission mode (VehicleStatus.nav_state=3)
-            fog_client_sync.create_subs()
-            while fog_client_sync.waiting():
-                rclpy.spin_once(fog_client_sync)
+            
         elif args.command == 'goto':
             fog_client.send_goto(
-                args.latitude, 
+                args.latitude,
                 args.longitude,
                 args.altitude,
                 args.yaw)
-            poller = LogPoller(args)
-            poller.wait_for_existence('control_interface', 'No navigation goals available. Switching to IDLE', args.timeout)
+            
         elif args.command == 'local':
-            fog_client.send_goto(
-                args.latitude, 
+            fog_client.send_local(
+                args.latitude,
                 args.longitude,
                 args.altitude,
                 args.yaw)
-            poller = LogPoller(args)
-            poller.wait_for_existence('control_interface', 'No navigation goals available. Switching to IDLE', args.timeout)
+            
         elif args.command == 'land':
             fog_client.send_land()
-            # wait until drone is in mission mode (VehicleStatus.arming_state=3)
-            fog_client_sync.create_subs()
-            while fog_client_sync.waiting():
-                rclpy.spin_once(fog_client_sync)
-
+            
         elif args.command == 'area':
             pass
         elif args.command == 'get_params':
             pass
+
+        fog_client_sync.create_subs()
+        timeout = time.time() + args.timeout
+        while fog_client_sync.waiting() and (time.time() < timeout):
+            rclpy.spin_once(fog_client_sync)
+
+        if fog_client_sync.waiting():
+            status = False
 
         fog_client.destroy_node()
         fog_client_sync.destroy_node()
@@ -422,10 +382,12 @@ def main(args):
 
     rclpy.shutdown()
 
+    return status
+
 
 if __name__ == '__main__':
     args = init_arg_parser()
-    main(args)
+    status = main(args)
 
 
-sys.exit(0)
+sys.exit(status)
