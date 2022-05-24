@@ -68,6 +68,15 @@ class FogClientAsync(Node):
         self.future = self.cli.call_async(self.req)
         self.__wait_for_response('arming')
 
+    def send_test(self):
+        self.cli = self.create_client(SetBool, '/%s/control_interface/arming' % self.drone_device_id)
+        while not self.cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = SetBool.Request()
+        self.req.data = True
+        self.future = self.cli.call_async(self.req)
+        self.__wait_for_response('testing arm')
+
     def send_takeoff(self):
         self.cli = self.create_client(Trigger, '/%s/control_interface/takeoff' % self.drone_device_id)
         while not self.cli.wait_for_service(timeout_sec=2.0):
@@ -298,6 +307,9 @@ def main(args):
     if args.sync == False:
 
         fog_client = FogClientAsync()
+
+        if args.command == 'test':
+            fog_client.send_test()
 
         if args.command == 'arming':
             fog_client.send_arming()
