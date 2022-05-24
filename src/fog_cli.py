@@ -227,6 +227,11 @@ def init_arg_parser():
     arming_parser.add_argument('--timeout', type=int)
     arming_parser.set_defaults(func=run_command)
 
+    test_parser = subparsers.add_parser('test', help='Testing')
+    test_parser.add_argument('--sync', action='store_true', help='Run command synchronously')
+    test_parser.add_argument('--timeout', type=int)
+    test_parser.set_defaults(func=run_command)
+
     takeoff_parser = subparsers.add_parser('takeoff', help='Takeoff')
     takeoff_parser.add_argument('--sync', action='store_true')
     takeoff_parser.add_argument('--timeout', type=int)
@@ -349,6 +354,9 @@ def main(args):
     else:
         fog_client = FogClientAsync()
         fog_client_sync = FogClientSync(args)
+
+        if args.command == 'test':
+            fog_client.send_test()
 
         if args.command == 'arming':
             # send message
