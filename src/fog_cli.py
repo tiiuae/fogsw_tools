@@ -68,15 +68,6 @@ class FogClientAsync(Node):
         self.future = self.cli.call_async(self.req)
         self.__wait_for_response('arming')
 
-    def send_test(self):
-        self.cli = self.create_client(SetBool, '/%s/control_interface/arming' % self.drone_device_id)
-        while not self.cli.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info('service not available, waiting again...')
-        self.req = SetBool.Request()
-        self.req.data = True
-        self.future = self.cli.call_async(self.req)
-        self.__wait_for_response('testing arm')
-
     def send_takeoff(self):
         self.cli = self.create_client(Trigger, '/%s/control_interface/takeoff' % self.drone_device_id)
         while not self.cli.wait_for_service(timeout_sec=2.0):
@@ -227,11 +218,6 @@ def init_arg_parser():
     arming_parser.add_argument('--timeout', type=int)
     arming_parser.set_defaults(func=run_command)
 
-    test_parser = subparsers.add_parser('test', help='Testing')
-    test_parser.add_argument('--sync', action='store_true', help='Run command synchronously')
-    test_parser.add_argument('--timeout', type=int)
-    test_parser.set_defaults(func=run_command)
-
     takeoff_parser = subparsers.add_parser('takeoff', help='Takeoff')
     takeoff_parser.add_argument('--sync', action='store_true')
     takeoff_parser.add_argument('--timeout', type=int)
@@ -313,9 +299,6 @@ def main(args):
 
         fog_client = FogClientAsync()
 
-        if args.command == 'test':
-            fog_client.send_test()
-
         if args.command == 'arming':
             fog_client.send_arming()
 
@@ -354,9 +337,6 @@ def main(args):
     else:
         fog_client = FogClientAsync()
         fog_client_sync = FogClientSync(args)
-
-        if args.command == 'test':
-            fog_client.send_test()
 
         if args.command == 'arming':
             # send message
