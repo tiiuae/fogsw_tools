@@ -24,32 +24,28 @@ from std_msgs.msg import String
 
 class FogClientAsync(Node):
 
-    def __init__(self):
+    def __init__(self, args):
         super().__init__('fog_client_async')
         self.drone_device_id = os.getenv('DRONE_DEVICE_ID')
+        self.args = args
 
     def run_server(self):
         server = iperf3.Server()
-        server.bind_address = '127.0.0.1'
-        server.port = 6969
-        server.verbose = False
-        print("Starting server:")
+        server.bind_address = self.args.ip
+        server.port = self.args.port
+        print("Starting server, listening on %s:%d" % (self.args.ip, self.args.port))
         n = 1
         while True:
             result = server.run()
             print("\tTest number %d done" % n)
             n = n + 1
 
-
     def run_client(self):
         client = iperf3.Client()
         client.duration = 1
-        client.server_hostname = '127.0.0.1'
-        client.port = 6969
-        client.num_streams = 10
-        client.zerocopy = True
-        client.verbose = True
-        client.reverse = False
+        client.server_hostname = self.args.ip
+        client.port = self.args.port
+        client.num_streams = 1
 
         result = client.run()
         return result
@@ -111,12 +107,13 @@ def init_arg_parser():
     subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
 
     server_parser = subparsers.add_parser('server', help='Run server')
-    server_parser.add_argument('--port', type=int)
+    server_parser.add_argument('--ip', type=str, help='Ip address of the server, default=[127.0.0.1]', default='127.0.0.1')
+    server_parser.add_argument('--port', type=int, default=5201)
 
     client_parser = subparsers.add_parser('client', help='Run client')
+    client_parser.add_argument('-ip', type=str, help='Ip address of the server to connect, default=[127.0.0.1]', default='127.0.0.1')
+    client_parser.add_argument('--port', type=int, help='port, default=[5201]', default=5201)
     client_parser.add_argument('--time', type=int)
-    client_parser.add_argument('--ip', type=int)
-    client_parser.add_argument('--port', type=int)
     client_parser.add_argument('--uav_name', type=int)
 
     args = parser.parse_args()
@@ -152,14 +149,13 @@ def handler(signum, frame):
     print('SIGINT or CTRL-C detected. Exiting gracefully')
     exit(0)
 
-
 def main(args):
 
     status = 0
 
     rclpy.init()
 
-    fog_client = FogClientAsync()
+    fog_client = FogClientAsync(args)
     fog_client_sync = FogClientSync(args)
 
     if args.command == 'server':
@@ -169,9 +165,6 @@ def main(args):
         fog_client.test()
         
     fog_client_sync.create_subs()
-    # timeout = time.time() + args.timeout
-    # while fog_client_sync.waiting() and (time.time() < timeout):
-    #     rclpy.spin_once(fog_client_sync)
 
     if fog_client_sync.waiting():
         status = False
@@ -179,18 +172,12 @@ def main(args):
     fog_client.destroy_node()
     fog_client_sync.destroy_node()
 
-
     rclpy.shutdown()
 
     return status
 
-
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, handler)
-    signal.signal(signal.SIGTERM, handler)
-    signal.signal(signal.SIGTSTP, handler)
-    signal.signal(signal.SIGCONT, handler)
-
     args = init_arg_parser()
     status = main(args)
 
