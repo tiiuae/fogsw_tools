@@ -5,7 +5,7 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-1cabd43
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     python3-pip python3-systemd gcc \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pyserial pymavlink mavsdk
+    && pip3 install pyserial pymavlink mavsdk iperf3
 
 WORKDIR /fog-tools
 
