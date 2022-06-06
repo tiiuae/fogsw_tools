@@ -23,11 +23,8 @@ fi
 
 # DO NOT PUT SPACES IN THE NAMES
 input=(
-  'Rosbag' 'ros2 launch fog_core rosbag.py path:='"/data/"''
+  'log' 'fog logs fog_navigation'
 
-  'app' 'fog ssh app'
-
-  'f4f' 'fog ssh app; docker run --rm -it ghcr.io/tiiuae/f4f-tools bash'
 )
 
 init_window="app"
