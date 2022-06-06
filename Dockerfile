@@ -20,6 +20,7 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/fog-tools
 ENV PYTHONPATH=/opt/ros/galactic/lib/python3.8/site-packages
 ENV LD_LIBRARY_PATH=/opt/ros/galactic/opt/yaml_cpp_vendor/lib:/opt/ros/galactic/lib/x86_64-linux-gnu:/opt/ros/galactic/lib
 
+COPY config/tmux.conf /etc/tmux.conf
 COPY src/ /fog-tools/
 
 WORKDIR /fog-tools
