@@ -3,9 +3,9 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-1cabd43
 # pyserial + pymavlink are dependencies of mavlink_shell.
 # unfortunately gcc is required to install pymavlink.
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    python3-pip python3-systemd gcc iperf3\
+    python3-pip python3-systemd gcc tmux\
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pyserial pymavlink mavsdk tmux
+    && pip3 install pyserial pymavlink mavsdk
 
 WORKDIR /fog-tools
 
