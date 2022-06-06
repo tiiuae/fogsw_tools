@@ -1,0 +1,183 @@
+# DRONE_DEVICE_ID will be replaced during provisioning.
+/fleet/missionengine:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/battery_status/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/distance_sensor/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/home_position/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/mission_result/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/timesync/in:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/sensor_baro/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/sensor_combined/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/sensor_gps/in:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/sensor_mag/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_control_mode/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_global_position/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_gps_position/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_land_detected/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_local_position/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_odometry/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/fmu/vehicle_status/out:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/control_interface/debug/waypoint_markers:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/control_interface/diagnostics:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/control_interface/local_odom:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/mesh_parameters:
+  reliability: reliable
+  durability: transient_local
+  history: keep_all
+/_DRONE_DEVICE_ID_/mesh_visual:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/missions:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/_DRONE_DEVICE_ID_/navigation/binary_tree_markers_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/navigation/expansion_markers_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/navigation/goal_markers_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/navigation/path_markers_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/navigation/status_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/free_cells_vis_array_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/occupied_cells_vis_array:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/octomap_binary:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/octomap_free_centers_out:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/octomap_full:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/octomap_point_cloud_centers:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/projected_map:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/octomap_server/projected_map_updates:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/_DRONE_DEVICE_ID_/rplidar/scan:
+  reliability: best_effort
+  durability: volatile
+  history: keep_all
+/tf:
+  reliability: reliable
+  durability: volatile
+  history: keep_all
+/tf_static:
+  reliability: reliable
+  durability: transient_local
+  history: keep_all
+/initialpose:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
+/goal_pose:
+  reliability: reliable
+  durability: volatile
+  history: keep_last
+  depth: 5
