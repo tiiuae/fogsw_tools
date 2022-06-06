@@ -5,7 +5,7 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-1cabd43
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     python3-pip python3-systemd gcc iperf3\
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pyserial pymavlink mavsdk iperf3
+    && pip3 install pyserial pymavlink mavsdk tmux
 
 WORKDIR /fog-tools
 
@@ -22,6 +22,6 @@ ENV LD_LIBRARY_PATH=/opt/ros/galactic/opt/yaml_cpp_vendor/lib:/opt/ros/galactic/
 
 COPY src/ /fog-tools/
 
-WORKDIR /tools-data
+WORKDIR /fog-tools
 
 CMD ["ls", "-1", "/fog-tools"]
