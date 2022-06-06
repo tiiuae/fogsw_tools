@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-1cabd43
+FROM ghcr.io/tiiuae/fog-ros-baseimage:stable
 
 # pyserial + pymavlink are dependencies of mavlink_shell.
 # unfortunately gcc is required to install pymavlink.
@@ -7,6 +7,11 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install pyserial pymavlink mavsdk
 
+RUN apt-get update -y && apt-get install -y  \
+    ros-galactic-fognav-msgs \
+    ros-${ROS_DISTRO}-ros2bag \
+    ros-${ROS_DISTRO}-rosbag2-storage-default-plugins\
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /fog-tools
 
 # Install pip and python dependencies

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-source /opt/ros/galactic/setup_fog.sh
+source /opt/ros/galactic/setup.bash
 
-ros2 bag record -a --qos-profile-overrides-path /opt/ros/galactic/share/mission-data-recorder/fog_qos_overrides.yaml &
+template_yamlpath=/fog-tools/qos_overrides/fog_qos_overrides_template.yaml
+yamlpath=/fog-tools/qos_overrides/fog_qos_overrides.yaml
+sed "s/_DRONE_DEVICE_ID_/${DRONE_DEVICE_ID}/g" ${template_yamlpath} > ${yamlpath}
+cat ${yamlpath}
+ros2 bag record -a --qos-profile-overrides-path ${yamlpath} &
 ROS_BAG_PID=$!
 
 echo "Press any key to stop recording."
