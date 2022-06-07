@@ -9,6 +9,16 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 RUN apt-get update -y && apt-get install -y  \
     ros-galactic-fognav-msgs \
+    ros-galactic-nav-msgs \
+    ros-galactic-geometry-msgs \
+    ros-galactic-shape-msgs \
+    ros-galactic-std-msgs \
+    ros-galactic-sensor-msgs \
+    ros-galactic-visualization-msgs \
+    ros-galactic-tf2 \
+    ros-galactic-tf2-eigen \
+    ros-galactic-tf2-geometry-msgs \
+    ros-galactic-trajectory-msgs \
     ros-${ROS_DISTRO}-ros2bag \
     ros-${ROS_DISTRO}-rosbag2-storage-default-plugins\
     && rm -rf /var/lib/apt/lists/*
