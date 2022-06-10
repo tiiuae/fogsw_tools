@@ -108,7 +108,7 @@ class MavlinkSerialPort():
 
 def main():
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument('port', metavar='PORT', nargs='?', default = None,
+    parser.add_argument('port', metavar='PORT', nargs='?', default = ':15761',
             help='Mavlink port name: serial: DEVICE[,BAUD], udp: IP:PORT, tcp: tcp:IP:PORT. Eg: \
 /dev/ttyUSB0 or 0.0.0.0:14550. Auto-detect serial if not given.')
     parser.add_argument("--baudrate", "-b", dest="baudrate", type=int,
