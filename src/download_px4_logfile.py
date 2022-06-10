@@ -206,7 +206,7 @@ class LogFileDownloader:
     async def run(self):
         workdir = os.getcwd()
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=__doc__)
-        parser.add_argument('-a', '--address', action="store", help='Address to connect. (e.g serial:///dev/ttyACM0, udp:192.168.200.101:14540, tcp://:5760)', default='tcp://192.168.200.2:5760')
+        parser.add_argument('-a', '--address', action="store", help='Address to connect. (e.g serial:///dev/ttyACM0, udp:192.168.200.101:14540, tcp://:5760)', default='udp://:15761')
         parser.add_argument('-d', '--dir', action="store", help='Output directory (default .)', default=workdir)
         parser.add_argument('-l', '--latest', action="store_true", help='Fetch latest logfile and skip interactive selection')
         self.args = parser.parse_args()
