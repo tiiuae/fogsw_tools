@@ -1,0 +1,1 @@
+fog ssh mesh "mesh-11s.sh off"
