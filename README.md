@@ -8,9 +8,6 @@ Run this script to start recording logs of key applications in the Mission Compu
 The script will block until any key is pressed. Then it will stop recoding the rosbag.
 It uses some of the scripts included in this package like fogsw_package_list.sh, mesh_installation_chech.sh and fog_record_bag_all_topics.sh.
 
-# fogsw_package_list.sh
-Prints the list of packages and its versions of the key components in the Mission Computer.
-
 # mesh_installation_check.sh
 Prints information about the mesh configuration, packages installed and its versions.
 
