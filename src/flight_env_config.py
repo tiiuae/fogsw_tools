@@ -181,7 +181,7 @@ class FlightEnvChanger:
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=__doc__)
         parser.add_argument('COMMAND', choices=['check', 'download', 'upload', 'remove', 'reboot'], help='Command to execute',)
         parser.add_argument('-f', '--file', action="store", help='Path to local config file to be read/write', default='./config.txt')
-        parser.add_argument('-a', '--address', action="store", help='Address to connect. (e.g serial:///dev/ttyACM0, udp://192.168.200.101:14540, tcp://:5760)', default='udp://:5760')
+        parser.add_argument('-a', '--address', action="store", help='Address to connect. (e.g serial:///dev/ttyACM0, udp://192.168.200.101:14540, tcp://:5760)', default='tcp://192.168.100.2:5760')
         self.args = parser.parse_args()
 
         await self.initialize()
