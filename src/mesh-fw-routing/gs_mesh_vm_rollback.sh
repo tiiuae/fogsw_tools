@@ -1,1 +1,1 @@
-fog ssh mesh "mesh-11s.sh off"
+fog ssh gslink "mesh-11s.sh off"
