@@ -1,3 +1,13 @@
+FROM golang:1.18.1 as builder
+
+WORKDIR /build
+COPY src/download_px4_logfile/go.mod src/download_px4_logfile/go.sum ./
+RUN go mod download
+COPY src/download_px4_logfile ./
+
+RUN GOOS=linux GOARCH=amd64 go build -o download-px4-logfile .
+
+
 FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-3dcb78d
 
 # pyserial + pymavlink are dependencies of mavlink_shell.
@@ -21,6 +31,7 @@ ENV PYTHONPATH=/opt/ros/galactic/lib/python3.8/site-packages
 ENV LD_LIBRARY_PATH=/opt/ros/galactic/opt/yaml_cpp_vendor/lib:/opt/ros/galactic/lib/x86_64-linux-gnu:/opt/ros/galactic/lib
 
 COPY scripts/ /fog-tools/
+COPY --from=builder /build/download-px4-logfile /fog-tools/
 
 WORKDIR /tools-data
 
