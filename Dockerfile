@@ -1,5 +1,8 @@
 FROM ghcr.io/tiiuae/fog-ros-baseimage:v2.1.0
 
+# maintainer
+LABEL org.opencontainers.image.authors="joonas.loppi@unikie.com"
+
 # pyserial + pymavlink are dependencies of mavlink_shell.
 # unfortunately gcc is required to install pymavlink.
 #
