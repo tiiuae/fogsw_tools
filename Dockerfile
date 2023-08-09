@@ -12,7 +12,8 @@ RUN apt update \
         rosbag2-py \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --upgrade pip \
-    && pip3 install \
+    && pip install --upgrade setuptools \
+    && pip install \
         mavsdk \
         pymavlink \
         pyserial \
