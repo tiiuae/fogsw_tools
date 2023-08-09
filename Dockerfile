@@ -12,7 +12,9 @@ RUN apt update \
         rosbag2-py \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --upgrade pip \
-    && pip install --upgrade setuptools \
+    && pip install --upgrade \
+        setuptools \
+        wheel \
     && pip install \
         mavsdk \
         pymavlink \
