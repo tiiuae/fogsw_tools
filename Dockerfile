@@ -13,9 +13,11 @@ RUN apt update \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --upgrade pip \
+    && rm -rf $HOME/.cache/pip/* \
     && pip install --upgrade \
         setuptools \
         wheel \
+    && rm -rf $HOME/.cache/pip/* \
     && pip install \
         mavsdk \
         pymavlink \
