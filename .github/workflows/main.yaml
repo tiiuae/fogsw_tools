@@ -25,7 +25,7 @@ jobs:
         run: |
           calculatedSha=$(git rev-parse --short ${{ github.sha }})
           echo "SHORT_GIT_SHA=$calculatedSha" >> $GITHUB_OUTPUT
-    
+      
       - uses: actions/checkout@v4
 
       - name: Setup QEMU
@@ -67,9 +67,6 @@ jobs:
   create-manifest-list:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
