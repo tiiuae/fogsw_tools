@@ -4,13 +4,12 @@ on:
   push:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         arch: [amd64, arm64, riscv64]
@@ -20,14 +19,14 @@ jobs:
         with:
           tool-cache: false
           
+      - uses: actions/checkout@v4
+
       - name: Set short git commit SHA
         id: vars
         run: |
           calculatedSha=$(git rev-parse --short ${{ github.sha }})
           echo "SHORT_GIT_SHA=$calculatedSha" >> $GITHUB_OUTPUT
-      
-      - uses: actions/checkout@v4
-
+    
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -67,6 +66,9 @@ jobs:
   create-manifest-list:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 

@@ -21,8 +21,9 @@ RUN apt update \
     && pip install \
         mavsdk \
         pymavlink \
-        pyserial
-
+        pyserial \
+    && rm -rf $HOME/.cache/pip/*
+    
 WORKDIR /fog-tools
 
 # Install pip and python dependencies
