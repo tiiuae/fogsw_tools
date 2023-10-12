@@ -18,7 +18,7 @@ jobs:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
-          tools-cache: false
+          tool-cache: false
           
       - name: Set short git commit SHA
         id: vars

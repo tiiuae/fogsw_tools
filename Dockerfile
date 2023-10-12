@@ -21,8 +21,7 @@ RUN apt update \
     && pip install \
         mavsdk \
         pymavlink \
-        pyserial \
-        systemd
+        pyserial
 
 WORKDIR /fog-tools
 
