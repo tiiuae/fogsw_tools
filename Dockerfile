@@ -6,11 +6,10 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-79529bc
 # ros-galactic-rosbag2 so we can record ROS bags
 RUN apt update \
     && apt install -y --no-install-recommends \
-        gcc \
-        g++ \
-        g++-symlinks \
-        python3-pip \
+        packagegroup-core-buildessential \
         python3 \
+        python3-argcomplete-dev \
+        python3-pip \
         rosbag2 \
         rosbag2-py \
     && apt clean \
@@ -25,7 +24,10 @@ RUN apt update \
         mavsdk \
         pymavlink \
         pyserial \
-    && rm -rf $HOME/.cache/pip/*
+    && rm -rf $HOME/.cache/pip/* \
+    && apt autoremove -y --purge \
+        packagegroup-core-buildessential \
+        python3-argcomplete-dev
     
 WORKDIR /fog-tools
 
