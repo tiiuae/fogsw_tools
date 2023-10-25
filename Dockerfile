@@ -7,6 +7,7 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-79529bc
 RUN apt update \
     && apt install -y --no-install-recommends \
         gcc \
+        g++ \
         python3-pip \
         python3 \
         rosbag2 \
