@@ -24,10 +24,7 @@ RUN apt update \
         mavsdk \
         pymavlink \
         pyserial \
-    && rm -rf $HOME/.cache/pip/* \
-    && apt autoremove -y --purge \
-        packagegroup-core-buildessential \
-        python3-argcomplete-dev
+    && rm -rf $HOME/.cache/pip/*
     
 WORKDIR /fog-tools
 
