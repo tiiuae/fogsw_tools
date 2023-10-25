@@ -8,6 +8,7 @@ RUN apt update \
     && apt install -y --no-install-recommends \
         gcc \
         g++ \
+        g++-symlinks \
         python3-pip \
         python3 \
         rosbag2 \
