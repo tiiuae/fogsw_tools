@@ -1,13 +1,13 @@
 #!/bin/bash
 
-source /opt/ros/galactic/setup_fog.sh
+source /etc/profile.d/ros/setup.bash
 
 LOG_FOLDER_NAME=flight_logs-$(date +%Y_%m_%d-%H%M%S)
-LOG_FOLDER_PATH=/home/sad/${LOG_FOLDER_NAME}
+LOG_FOLDER_PATH=/var/log/${LOG_FOLDER_NAME}
 LOG_PIDS=()
 NODES_PARAMS_TO_LOG=("control_interface" "navigation")
 
-mkdir ${LOG_FOLDER_PATH}
+mkdir -p ${LOG_FOLDER_PATH}
 
 function start_service_logging () {
     RUNNING_SINCE=$(uptime -s)

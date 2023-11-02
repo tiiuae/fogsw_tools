@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /opt/ros/foxy/setup_fog.sh
+source /etc/profile.d/ros/setup.bash
 source ~/respeaker_array/install/setup.bash
 
 ros2 bag record --qos-profile-overrides-path /opt/ros/foxy/share/mission-data-recorder/fog_qos_overrides.yaml \
