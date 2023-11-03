@@ -2,25 +2,23 @@
 # unfortunately gcc is required to install pymavlink for amd64
 # and build essentials for other architectures
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:v3.0.2
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.0.2
 
 RUN apt update \
     && apt install -y --no-install-recommends \
+        mavsdk \
+        pymavlink \
         python3 \
+        python3-future \
+        python3-lxml \
         python3-pip \
+        python3-setuptools \
+        python3-wheel \
+        python3-pyserial \
         rosbag2 \
         rosbag2-py \
     && apt clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --upgrade pip \
-    && pip install --upgrade \
-        setuptools \
-        wheel \
-    && pip install \
-        mavsdk \
-        pymavlink \
-        pyserial \
-    && rm -rf $HOME/.cache/pip/*
+    && rm -rf /var/lib/apt/lists/*
     
 WORKDIR /fog-tools
 
