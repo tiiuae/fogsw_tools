@@ -10,23 +10,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        arch: [amd64, arm64, riscv64]
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          
       - uses: actions/checkout@v4
 
-      - name: Set short git commit SHA
-        id: vars
-        run: |
-          calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "SHORT_GIT_SHA=$calculatedSha" >> $GITHUB_OUTPUT
-    
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -56,39 +42,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/${{ matrix.arch }}
-          push: true
+          platforms: linux/amd64,linux/arm64,linux/riscv64
+          push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/tiiuae/tii-fogsw-tools:sha-${{ steps.vars.outputs.SHORT_GIT_SHA }}-${{ matrix.arch }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  create-manifest-list:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set short git commit SHA
-        id: vars
-        run: |
-          calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "SHORT_GIT_SHA=$calculatedSha" >> $GITHUB_OUTPUT
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create manifest list
-        run: |
-          docker buildx imagetools create \
-          -t ghcr.io/tiiuae/tii-fogsw-tools:sha-${{ steps.vars.outputs.SHORT_GIT_SHA }} \
-          ghcr.io/tiiuae/tii-fogsw-tools:sha-${{ steps.vars.outputs.SHORT_GIT_SHA }}-amd64 \
-          ghcr.io/tiiuae/tii-fogsw-tools:sha-${{ steps.vars.outputs.SHORT_GIT_SHA }}-arm64 \
-          ghcr.io/tiiuae/tii-fogsw-tools:sha-${{ steps.vars.outputs.SHORT_GIT_SHA }}-riscv64
