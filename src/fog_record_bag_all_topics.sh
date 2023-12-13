@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /opt/ros/galactic/setup_fog.sh
+source /etc/profile.d/ros/setup.bash
 
 ros2 bag record -a --qos-profile-overrides-path /opt/ros/galactic/share/mission-data-recorder/fog_qos_overrides.yaml &
 ROS_BAG_PID=$!
