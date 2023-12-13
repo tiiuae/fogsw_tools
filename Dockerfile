@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.0.2
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.1.0
 
 RUN apt update \
     && apt install -y --no-install-recommends \
