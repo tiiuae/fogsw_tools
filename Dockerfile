@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-9a1be77
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.1.0
 
 # pyserial + pymavlink are dependencies of mavlink_shell.
 # unfortunately gcc is required to install pymavlink.
