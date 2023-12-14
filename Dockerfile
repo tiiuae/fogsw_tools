@@ -15,7 +15,7 @@ RUN apt update \
         rosbag2-py \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
-    
+
 WORKDIR /fog-tools
 
 # make all commands in /fog-tools/* invocable without full path
