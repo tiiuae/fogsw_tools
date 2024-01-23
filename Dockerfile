@@ -16,6 +16,15 @@ RUN apt update \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
 
+ARG BUILDARCH
+ARG TARGETARCH
+
+# For qemu emulated arm64 builds, the pip3 install takes a lot of time.
+# This makes it so that at least for the native builds, we have the library.
+RUN if [ "$BUILDARCH" = "$TARGETARCH" ]; then \
+        pip3 install mavsdk; \
+    fi
+
 WORKDIR /fog-tools
 
 # make all commands in /fog-tools/* invocable without full path
@@ -27,3 +36,4 @@ COPY src/ /fog-tools/
 WORKDIR /tools-data
 
 CMD ["ls", "-1", "/fog-tools"]
+ENTRYPOINT [ "/bin/bash", "-c" ]

@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 """
 Flight Environment Config Changer
@@ -15,8 +15,16 @@ Command description:
 """
 
 import asyncio
+import importlib.util
+import sys, os
+
+# For arm64, the docker image does not have mavsdk installed since qemu emulation is slow
+# Installing during runtime should be faster
+if importlib.util.find_spec('mavsdk') is None:
+    os.system('pip3 install mavsdk')
+
 from mavsdk import System
-import sys, os, re
+import re
 import argparse
 import shutil
 
