@@ -38,12 +38,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container image and push
+      - name: Build 🔨
         uses: docker/build-push-action@v5
         with:
-          context: .
+          outputs: type=docker
+          tags: smoketest-img  # proper tags will be pushed later
+
+      - name: Smoke test 🔥
+        run: |
+          set -eu
+
+          # when running without arguments, it should provide list of tools available
+          docker run --name=smoketest --rm -t smoketest-img > list-of-tools.txt
+
+          # ask for help with mavlink shell
+          docker run --name=smoketest --rm -t smoketest-img mavlink_shell.py --help > mavlink-shell-help.txt
+
+          if ! grep -q "mavlink_shell.py" list-of-tools.txt ; then
+              echo "when running without arguments it doesn't list the expected tool"
+              exit 1
+          fi
+
+          if ! grep -q "  --baudrate BAUDRATE" mavlink-shell-help.txt ; then
+              echo "Output of 'mavlink_shell.py --help' doesn't contain expected string"
+              exit 1
+          fi
+
+      - name: Push 🔼
+        uses: docker/build-push-action@v5
+        with:
           platforms: linux/amd64,linux/arm64,linux/riscv64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ${{ steps.meta.outputs.tags }}
