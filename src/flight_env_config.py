@@ -143,7 +143,7 @@ class FlightEnvChanger:
         if await self.validate_config_file():
             if logging:
                 sys.stdout.write("Download")
-            progress = self.mav.ftp.download(self.config_file_path, '/tmp')
+            progress = self.mav.ftp.download(self.config_file_path, '/tmp', False)
             async for p in progress:
                 if logging:
                     sys.stdout.write(".")
