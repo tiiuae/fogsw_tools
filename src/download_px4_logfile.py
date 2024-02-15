@@ -189,7 +189,7 @@ class LogFileDownloader:
 
     async def download_file(self, file, date, dir):
         previous_progress = 0
-        async for progress in self.mav.ftp.download(file, dir):
+        async for progress in self.mav.ftp.download(file, dir, False):
             new_progress = round((progress.bytes_transferred/progress.total_bytes)*100)
             if new_progress != previous_progress:
                 sys.stdout.write(f"\r{new_progress} %")
