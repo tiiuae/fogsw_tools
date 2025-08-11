@@ -7,7 +7,7 @@ import sys, os
 # For arm64, the docker image does not have mavsdk installed since qemu emulation is slow
 # Installing during runtime should be faster
 if importlib.util.find_spec('mavsdk') is None:
-    os.system('pip3 install mavsdk')
+    os.system('pip3 install mavsdk==2.1.0')
 
 from mavsdk import System
 import argparse
