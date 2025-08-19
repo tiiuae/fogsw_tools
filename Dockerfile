@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-c04d413
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.4.0
 
 RUN apt update \
     && apt install -y --no-install-recommends \
